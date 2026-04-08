@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
+import { useScroll } from '../hooks/useScroll'
 
 export default function ScrollPage() {
   const [list, setList] = useState([]);
@@ -7,14 +8,18 @@ export default function ScrollPage() {
   const [error, setError] = useState("");
   const skipRef = useRef(0);
   const loadingRef = useRef(false);
+  const { endScreen, setEndScreen } = useScroll();
 
   useEffect(() => {
-    window.addEventListener("scroll", onscroll);
     doApi(0);
-    return () => {
-      window.removeEventListener("scroll", onscroll);
-    }
   }, [])
+
+  useEffect(() => {
+    if (endScreen) {
+      getNextPage();
+      setEndScreen(false);
+    }
+  }, [endScreen])
 
   const doApi = async (skip) => {
     try {
@@ -41,16 +46,6 @@ export default function ScrollPage() {
     if (loadingRef.current) return
     const nextSkip = skipRef.current + 10;
     doApi(nextSkip);
-  }
-
-  const onscroll = () => {
-    const windowHeight = window.innerHeight;
-    const scrollTop = document.documentElement.scrollTop;
-    const docHeight = document.documentElement.offsetHeight;
-
-    if (Math.ceil(windowHeight + scrollTop) >= docHeight) {
-      getNextPage();
-    }
   }
 
   return (
